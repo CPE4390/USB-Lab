@@ -22,7 +22,7 @@
 
 #include <xc.h>
 #include <stdbool.h>
-#include <buttons.h>
+#include "buttons.h"
 
 /*** Button Definitions *********************************************/
 #define S2_PORT  PORTBbits.RB2

@@ -30,6 +30,8 @@ please contact mla_licensing@microchip.com
 #include "app_device_mouse.h"
 #include "usb_config.h"
 
+#include "LCD.h"
+
 #if(__XC8)
     #define PACKED
 #else
@@ -212,6 +214,8 @@ void APP_DeviceMouseInitialize(void)
      * set to false then the demo board will send 0,0,0 resulting
      * in no mouse movement.
      */
+    LCDInit();
+    lprintf(0, "USB Mouse Demo");
     mouse.movementMode = true;
     
     /* initialize the handles to invalid so we know they aren't being used. */

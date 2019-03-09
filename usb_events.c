@@ -24,7 +24,6 @@ please contact mla_licensing@microchip.com
 #include "usb_device_hid.h"
 
 #include "app_device_mouse.h"
-#include "app_led_usb_status.h"
 
 /*******************************************************************
  * Function:        bool USER_USB_CALLBACK_EVENT_HANDLER(

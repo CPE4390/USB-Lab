@@ -26,7 +26,6 @@ please contact mla_licensing@microchip.com
 #include "usb_device.h"
 #include "usb_device_hid.h"
 
-#include "app_led_usb_status.h"
 #include "app_device_mouse.h"
 #include "usb_config.h"
 
@@ -171,18 +170,7 @@ static MOUSE_REPORT mouseReport MOUSE_REPORT_DATA_BUFFER_ADDRESS;
 static MOUSE_REPORT mouseReport;
 #endif
 
-typedef struct {
-
-    struct {
-        USB_HANDLE handle;
-        uint8_t idleRate;
-        uint8_t idleRateSofCount;
-    } inputReport[1];
-
-} MOUSE;
-
-static MOUSE mouse;
-
+USB_HANDLE txHandle;  //Handle for txPacket
 int ReadPot(void);
 
 /*********************************************************************
@@ -203,18 +191,17 @@ void APP_DeviceMouseInitialize(void) {
      * set to false then the demo board will send 0,0,0 resulting
      * in no mouse movement.
      */
-    LCDInit();
     lprintf(0, "USB Mouse Demo");
-    TRISBbits.TRISB0 = 1;
+    TRISBbits.TRISB0 = 1;  //Set buttons as inputs
     TRISBbits.TRISB2 = 1;
-    ANCON0 = 0x01;
+    ANCON0 = 0xfe;  //All digital inputs except RA0 
     ANCON1 = 0x1f;
     ADCON0=0x01;				\
     ADCON1=0x9E;
     TRISAbits.TRISA0 = 1;
     
     /* initialize the handles to invalid so we know they aren't being used. */
-    mouse.inputReport[0].handle = NULL;
+    txHandle = NULL;
 
     //enable the HID endpoint
     USBEnableEndpoint(HID_EP, USB_IN_ENABLED | USB_HANDSHAKE_ENABLED | USB_DISALLOW_SETUP);
@@ -250,28 +237,24 @@ void APP_DeviceMouseTasks(void) {
     if (USBIsDeviceSuspended() == true) {
         return;
     }
+    
+    //USB is connected and active so create a mouse report if last report has 
+    // been sent
     int adc = ReadPot();
-    if (HIDTxHandleBusy(mouse.inputReport[0].handle) == false) {
-        mouseReport.buttons.value = 0;
+    if (HIDTxHandleBusy(txHandle) == false) {
+        mouseReport.buttons.button1 = 0;
+        mouseReport.buttons.button2 = 0;
+        mouseReport.buttons.button3 = 0;
         mouseReport.x = (adc - 512) / 128;
         mouseReport.y = 0;
-        mouse.inputReport[0].handle = HIDTxPacket(
-                HID_EP,
-                (uint8_t*) & mouseReport,
-                sizeof (mouseReport)
-                );
+        txHandle = HIDTxPacket(HID_EP, (uint8_t*) &mouseReport, sizeof (mouseReport));
     }
-
-    
 }//end ProcessIO
 
 void APP_DeviceMouseIdleRateCallback(uint8_t reportId, uint8_t idleRate) {
     //Make sure the host is requesting to set the idleRate on a legal/implemented
     //report ID.  In applications that don't implement report IDs (such as this
     //firmware) the value should be == 0.
-    if (reportId == 0) {
-        mouse.inputReport[reportId].idleRate = idleRate;
-    }
 }
 
 /*******************************************************************************
@@ -302,4 +285,55 @@ int ReadPot(void) {
     GODONE = 1;
     while (GODONE);
     return ADRES;
+}
+
+void APP_LEDUpdateUSBStatus(void)
+{
+    static uint16_t ledCount = 0;
+
+    if(USBIsDeviceSuspended() == true)
+    {
+        LED_Off(LED_USB_DEVICE_STATE);
+        return;
+    }
+
+    switch(USBGetDeviceState())
+    {         
+        case CONFIGURED_STATE:
+            /* We are configured.  Blink fast.
+             * On for 75ms, off for 75ms, then reset/repeat. */
+            if(ledCount == 1)
+            {
+                LED_On(LED_USB_DEVICE_STATE);
+            }
+            else if(ledCount == 75)
+            {
+                LED_Off(LED_USB_DEVICE_STATE);
+            }
+            else if(ledCount > 150)
+            {
+                ledCount = 0;
+            }
+            break;
+
+        default:
+            /* We aren't configured yet, but we aren't suspended so let's blink with
+             * a slow pulse. On for 50ms, then off for 950ms, then reset/repeat. */
+            if(ledCount == 1)
+            {
+                LED_On(LED_USB_DEVICE_STATE);
+            }
+            else if(ledCount == 50)
+            {
+                LED_Off(LED_USB_DEVICE_STATE);
+            }
+            else if(ledCount > 950)
+            {
+                ledCount = 0;
+            }
+            break;
+    }
+
+    /* Increment the millisecond counter. */
+    ledCount++;
 }

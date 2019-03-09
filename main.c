@@ -24,7 +24,7 @@ please contact mla_licensing@microchip.com
 #include "usb_device_hid.h"
 
 #include "app_device_mouse.h"
-#include "app_led_usb_status.h"
+#include "LCD.h"
 
 /********************************************************************
  * Function:        void main(void)
@@ -44,7 +44,7 @@ please contact mla_licensing@microchip.com
 MAIN_RETURN main(void)
 {
     SYSTEM_Initialize(SYSTEM_STATE_USB_START);
-
+    LCDInit();
     USBDeviceInit();
     USBDeviceAttach();
     

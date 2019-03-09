@@ -73,5 +73,6 @@ void APP_DeviceMouseTasks(void);
 
 bool APP_DeviceMouseEventHandler(unsigned int event, void *pdata, size_t size);
 void APP_DeviceMouseSOFHandler(void);
+void APP_LEDUpdateUSBStatus(void);
 
 #endif

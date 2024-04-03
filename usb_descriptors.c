@@ -225,7 +225,7 @@ sizeof(sd001),USB_DESCRIPTOR_STRING,
 //Product string descriptor
 const struct{uint8_t bLength;uint8_t bDscType;uint16_t string[14];}sd002={
 sizeof(sd002),USB_DESCRIPTOR_STRING,
-{'E','E','T',' ','4','3','4','0',' ','M','o',
+{'C','P','E',' ','4','3','9','0',' ','M','o',
 'u','s','e'
 }};
 

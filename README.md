@@ -1,4 +1,4 @@
-# Lab 8 - USB
+# USB Lab
 
 A simple HID mouse application  
 
